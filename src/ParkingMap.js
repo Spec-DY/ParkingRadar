@@ -4,25 +4,27 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import parkingData from "./data/nearby_parking.json";
 import { FaParking } from "react-icons/fa";
 import ReactDOMServer from "react-dom/server";
+import './ParkingMap.css';
+import Popover from "@mui/material/Popover";
 
 const ParkingMap = () => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
-  const [mapLoaded, setMapLoaded] = useState(false); // 新增状态
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [heatmap, setHeatmap] = useState(null);
   const [markers, setMarkers] = useState([]);
-  const [infoWindows, setInfoWindows] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null); // Popover anchor element
+  const [selectedSpot, setSelectedSpot] = useState(null); // Store selected parking spot info
 
   // 动态加载 Google Maps API
   useEffect(() => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization`;
     script.async = true;
-    script.onload = () => setMapLoaded(true); // 当脚本加载完毕时更新状态
+    script.onload = () => setMapLoaded(true); // 更新脚本加载状态
     document.head.appendChild(script);
 
     return () => {
-      // 清理脚本
       document.head.removeChild(script);
     };
   }, []);
@@ -40,7 +42,7 @@ const ParkingMap = () => {
 
   // 初始化地图
   useEffect(() => {
-    if (!mapRef.current || map || !mapLoaded) return; // 等待脚本加载完成
+    if (!mapRef.current || map || !mapLoaded) return;
 
     const googleMap = new google.maps.Map(mapRef.current, {
       center: { lat: 43.7, lng: -79.4 },
@@ -55,7 +57,6 @@ const ParkingMap = () => {
 
     googleMap.setOptions({ clickableIcons: false });
 
-    // 添加交通图层
     const trafficLayer = new google.maps.TrafficLayer();
     trafficLayer.setMap(googleMap);
 
@@ -64,14 +65,14 @@ const ParkingMap = () => {
 
   // 初始化热力图
   useEffect(() => {
-    if (!map || !mapLoaded) return; // 等待脚本加载完成
+    if (!map || !mapLoaded) return;
 
     try {
       const heatmapData = getHeatmapData();
       const heatmapLayer = new google.maps.visualization.HeatmapLayer({
         data: heatmapData,
         map: map,
-        radius: 80, // 固定半径大小，可以根据需要调整
+        radius: 80,
         opacity: 0.6,
         gradient: [
           "rgba(0, 0, 255, 0)",
@@ -94,12 +95,11 @@ const ParkingMap = () => {
     }
   }, [map, mapLoaded, getHeatmapData]);
 
-  // 创建标记点和信息窗口
+  // 创建标记点和 Popover 显示内容
   useEffect(() => {
-    if (!map || markers.length > 0 || !mapLoaded) return; // 等待脚本加载完成
+    if (!map || markers.length > 0 || !mapLoaded) return;
 
     const newMarkers = [];
-    const newInfoWindows = [];
 
     const parkingIcon = {
       url: `${process.env.PUBLIC_URL}/parking.png`,
@@ -108,16 +108,6 @@ const ParkingMap = () => {
     };
 
     parkingData.forEach((spot) => {
-      const icon = {
-        url: `data:image/svg+xml,${encodeURIComponent(
-          ReactDOMServer.renderToString(
-            <FaParking style={{ fontSize: "24px", color: "black" }} />
-          )
-        )}`,
-        scaledSize: new google.maps.Size(24, 24),
-        anchor: new google.maps.Point(12, 24),
-      };
-
       const marker = new google.maps.Marker({
         position: {
           lat: spot.coordinates.lat,
@@ -127,32 +117,16 @@ const ParkingMap = () => {
         map: map,
       });
 
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="width: 200px;">
-            <h3>${spot.name}</h3>
-            <p>Total Spaces: ${spot.totalSpaces}</p>
-            <p>Handicap Spaces: ${spot.handicapSpaces}</p>
-            <p>Access: ${spot.access}</p>
-            <p>Available Now: ${spot.currentAvaliability}</p>
-            <p>Prediction in 1 Hour: ${spot.AvaliabilityAfterOneHour}</p>
-          </div>
-        `,
-      });
-
-      marker.addListener("click", () => {
-        newInfoWindows.forEach((iw) => iw.close());
-        infoWindow.open(map, marker);
+      marker.addListener("click", (event) => {
+        setAnchorEl(event.domEvent.currentTarget); // 设置 Popover 锚点
+        setSelectedSpot(spot); // 设置当前停车位信息
       });
 
       newMarkers.push(marker);
-      newInfoWindows.push(infoWindow);
     });
 
     setMarkers(newMarkers);
-    setInfoWindows(newInfoWindows);
 
-    // custom marker
     const stadiumIcon = {
       url: `${process.env.PUBLIC_URL}/stadium.png`,
       scaledSize: new google.maps.Size(60, 60),
@@ -164,21 +138,55 @@ const ParkingMap = () => {
       icon: stadiumIcon,
       map: map,
     });
+    const stadiumInfoWindow = new google.maps.InfoWindow({
+      content: `<div style="width: 200px;"><h1>Rogers Centre</h1></div>`,
+    });
 
     stadiumMarker.addListener("click", () => {
-      const stadiumInfoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="width: 200px;">
-            <h3>Rogers Centre</h3>
-          </div>
-        `,
-      });
-      stadiumInfoWindow.open(map, stadiumMarker);
+      stadiumInfoWindow.open(map, stadiumMarker); // 仅使用 InfoWindow 显示
     });
 
   }, [map, mapLoaded]);
 
-  return <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />;
+  // 关闭 Popover 的函数
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSelectedSpot(null);
+  };
+
+  return (
+    <div>
+      <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />
+
+      {/* Popover 组件 */}
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+      >
+        <div style={{ padding: 16 }}>
+          {selectedSpot && (
+            <>
+              <h3>{selectedSpot.name}</h3>
+              <p>Total Spaces: {selectedSpot.totalSpaces}</p>
+              <p>Handicap Spaces: {selectedSpot.handicapSpaces}</p>
+              <p>Access: {selectedSpot.access}</p>
+              <p>Available Now: {selectedSpot.currentAvaliability}</p>
+              <p>Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}</p>
+            </>
+          )}
+        </div>
+      </Popover>
+    </div>
+  );
 };
 
 export default ParkingMap;
