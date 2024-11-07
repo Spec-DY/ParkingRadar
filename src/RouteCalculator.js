@@ -1,5 +1,7 @@
 /* global google */
 import React, { useEffect } from "react";
+import Button from '@mui/material/Button';
+
 
 const RouteCalculator = ({
   map,
@@ -59,9 +61,9 @@ const RouteCalculator = ({
   };
 
   return (
-    <button onClick={calculateRoute} disabled={!selectedLot}>
-      Navigate
-    </button>
+    <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+      <Button variant="contained" onClick={calculateRoute} disabled={!selectedLot}>Navigate</Button>
+    </div>
   );
 };
 

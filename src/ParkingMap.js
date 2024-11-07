@@ -8,6 +8,11 @@ import { Popover } from "@mui/material";
 import RouteCalculator from "./RouteCalculator";
 import { FaParking, FaAccessibleIcon, FaDoorOpen, FaCheckCircle, FaClock } from "react-icons/fa";
 
+import { Paper, Typography, FormControl, InputLabel, Select, MenuItem, List, ListItem, ListItemText } from "@mui/material"
+import { AppBar, Toolbar, Button, Box } from "@mui/material";
+import { ListItemIcon } from "@mui/material";
+import { PiNumberSquareOneBold, PiNumberSquareTwoBold, PiNumberSquareThreeBold } from "react-icons/pi";
+
 const ParkingMap = () => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
@@ -152,64 +157,92 @@ const ParkingMap = () => {
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", backgroundColor: "#f0f0f0"}}>
       {/* Left Sidebar for Route Selection */}
-      <div style={{ width: "250px", padding: "10px", overflowY: "auto", backgroundColor: "#f4f4f4" }}>
-        <button
-          onClick={() => setShowControls((prev) => !prev)}
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-        >
-          {showControls ? "Hide Demo" : "Show Demo"}
-        </button>
+      <div style={{ width: "250px", padding: "20px", overflowY: "auto" }}>
+      <Paper elevation={3} style={{ padding: "10px" }}>
+  {/* Header */}
+  <Box mb={2}>
+    <AppBar
+      position="static"
+      color="default"
+      elevation={0}
+      style={{
+        padding: "30px",
+        borderBottom: "10px solid #e0e0e0",
+        backgroundColor: "#f8f9fa",
+      }}
+    >
+<Toolbar style={{ justifyContent: "center", padding: 0 }}>
+  <Typography variant="h5" align="center" style={{ fontFamily: 'Roboto, Arial, sans-serif' }}>
+    Parking Lot Navigation
+  </Typography>
+</Toolbar>
+    </AppBar>
+  </Box>
 
-        {showControls && (
-          <div style={{ padding: "10px" }}>
-            <label>Select Parking Lot: </label>
-            <select
-              value={selectedLot ? selectedLot.id : ""}
-              onChange={(e) => {
-                const lot = parkingData.find((lot) => lot.id === parseInt(e.target.value));
-                setSelectedLot(lot);
-              }}
-              style={{ width: "100%", marginBottom: "10px" }}
-            >
-              <option value="">Choose a parking lot</option>
-              {parkingData.map((lot) => (
-                <option key={lot.id} value={lot.id}>
-                  {lot.name} (Available: {lot.currentAvaliability})
-                </option>
-              ))}
-            </select>
+    {/* Select Parking Lot */}
+    <FormControl fullWidth style={{ marginBottom: "15px" }}>
+      <InputLabel>Select Parking Lot</InputLabel>
+      <Select
+        value={selectedLot ? selectedLot.id : ""}
+        onChange={(e) => {
+          const lot = parkingData.find(
+            (lot) => lot.id === parseInt(e.target.value)
+          );
+          setSelectedLot(lot);
+        }}
+        label="Select Parking Lot"
+      >
+        <MenuItem value="">
+          <em>Choose a parking lot</em>
+        </MenuItem>
+        {parkingData.map((lot) => (
+          <MenuItem key={lot.id} value={lot.id}>
+            {lot.name} (Available: {lot.currentAvaliability})
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
 
-            <RouteCalculator
-              map={map}
-              userLocation={userLocation}
-              selectedLot={selectedLot}
-              routesInfo={routesInfo}
-              setRoutesInfo={setRoutesInfo}
-              activeRouteIndex={activeRouteIndex}
-              setActiveRouteIndex={setActiveRouteIndex}
-            />
+    {/* Route Calculator */}
+    <RouteCalculator
+      map={map}
+      userLocation={userLocation}
+      selectedLot={selectedLot}
+      routesInfo={routesInfo}
+      setRoutesInfo={setRoutesInfo}
+      activeRouteIndex={activeRouteIndex}
+      setActiveRouteIndex={setActiveRouteIndex}
+    />
 
-            <ul style={{ paddingLeft: "10px" }}>
-              {routesInfo.map((route, index) => (
-                <li
-                  key={index}
-                  onClick={() => setActiveRouteIndex(index)}
-                  style={{
-                    cursor: "pointer",
-                    fontWeight: index === activeRouteIndex ? "bold" : "normal",
-                    color: index === activeRouteIndex ? "blue" : "black",
-                    padding: "5px 0",
-                  }}
-                >
-                  <strong>Route {index + 1}</strong>: {route.summary} - {route.duration} ({route.distance})
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    {/* Routes List */}
+    <List>
+  {routesInfo.map((route, index) => (
+    <ListItem
+      key={index}
+      button
+      onClick={() => setActiveRouteIndex(index)}
+      selected={index === activeRouteIndex}
+      style={{ display: "flex", alignItems: "center" }}
+    >
+      <div style={{ flex: '0 0 auto' }}>
+      {/* Display corresponding icon based on index */}
+      {index === 0 && <PiNumberSquareOneBold style={{ marginRight: 10, fontSize: "30px" }} />}
+      {index === 1 && <PiNumberSquareTwoBold style={{ marginRight: 10, fontSize: "30px" }} />}
+      {index === 2 && <PiNumberSquareThreeBold style={{ marginRight: 10, fontSize: "30px" }} />}
       </div>
+      <ListItemText
+        primary={`Route ${index + 1}: ${route.summary}`}
+        secondary={`${route.duration} (${route.distance})`}
+        style={{ color: index === activeRouteIndex ? "blue" : "black" }}
+      />
+    </ListItem>
+  ))}
+</List>
+  </Paper>
+</div>
+
 
       {/* Map Area */}
       <div ref={mapRef} style={{ height: "100vh", width: "calc(100% - 250px)" }} />
