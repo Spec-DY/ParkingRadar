@@ -53,6 +53,8 @@ const ParkingMap = () => {
       ],
     });
 
+    googleMap.setOptions({ clickableIcons: false });
+
     // 添加交通图层
     const trafficLayer = new google.maps.TrafficLayer();
     trafficLayer.setMap(googleMap);
@@ -121,7 +123,7 @@ const ParkingMap = () => {
 
       const infoWindow = new google.maps.InfoWindow({
         content: `
-          <div>
+          <div style="width: 200px;">
             <h3>${spot.name}</h3>
             <p>Total Spaces: ${spot.totalSpaces}</p>
             <p>Handicap Spaces: ${spot.handicapSpaces}</p>
@@ -144,10 +146,30 @@ const ParkingMap = () => {
     setMarkers(newMarkers);
     setInfoWindows(newInfoWindows);
 
-    return () => {
-      newMarkers.forEach((marker) => marker.setMap(null));
-      newInfoWindows.forEach((infoWindow) => infoWindow.close());
+    // custom marker
+    const stadiumIcon = {
+      url: `${process.env.PUBLIC_URL}/stadium.png`,
+      scaledSize: new google.maps.Size(60, 60),
+      anchor: new google.maps.Point(30, 60),
     };
+
+    const stadiumMarker = new google.maps.Marker({
+      position: { lat: 43.641796, lng: -79.390083 },
+      icon: stadiumIcon,
+      map: map,
+    });
+
+    stadiumMarker.addListener("click", () => {
+      const stadiumInfoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="width: 200px;">
+            <h3>Rogers Centre</h3>
+          </div>
+        `,
+      });
+      stadiumInfoWindow.open(map, stadiumMarker);
+    });
+
   }, [map, mapLoaded]);
 
   return <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />;
