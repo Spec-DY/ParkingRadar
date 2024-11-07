@@ -1,128 +1,156 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import 'leaflet.heat';
-import parkingData from './data/nearby_parking.json'; 
+/* global google */
+
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import parkingData from "./data/nearby_parking.json";
 import { FaParking } from "react-icons/fa";
-import ReactDOMServer from 'react-dom/server';
-
-const createParkingIcon = () => {
-  return L.divIcon({
-    html: ReactDOMServer.renderToString(<FaParking style={{ fontSize: "24px", color: "black" }} />),
-    className: 'custom-div-icon',
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-    popupAnchor: [0, -24],
-  });
-};
-
-
-const HeatmapLayer = ({ data, radius }) => {
-  const map = useMap();
-
-  useEffect(() => {
-
-    const heatLayer = L.heatLayer(
-      data.map(spot => {
-        const occupancyRate = 1 - (spot.availableSpots / spot.totalSpaces);
-        return [
-          spot.coordinates.lat, 
-          spot.coordinates.lng, 
-          occupancyRate * 5 // 强度
-        ];
-      }),
-      {
-        radius: radius,
-        blur: 15,
-        maxZoom: 17,
-        maxOpacity: 0.6,
-        gradient: { 0.2: 'blue', 0.5: 'lime', 0.8: 'yellow', 1.0: 'red' }
-      }
-    ).addTo(map);
-
-    return () => {
-      map.removeLayer(heatLayer);
-    };
-  }, [data, map, radius]);
-
-  return null;
-};
-
-// 自定义组件，用于实时监听地图的缩放级别
-const ZoomLevelWatcher = ({ setZoomLevel }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    const onZoomEnd = () => {
-      const currentZoom = map.getZoom();
-      setZoomLevel(currentZoom);
-      console.log("Current zoom level:", currentZoom);
-    };
-    
-    map.on('zoomend', onZoomEnd);
-
-    return () => {
-      map.off('zoomend', onZoomEnd);
-    };
-  }, [map, setZoomLevel]);
-
-  return null;
-};
+import ReactDOMServer from "react-dom/server";
 
 const ParkingMap = () => {
-  const [parkingSpots, setParkingSpots] = useState([]);
-  const [zoomLevel, setZoomLevel] = useState(12);
-  const [radius, setRadius] = useState(20);
+  const mapRef = useRef(null);
+  const [map, setMap] = useState(null);
+  const [mapLoaded, setMapLoaded] = useState(false); // 新增状态
+  const [heatmap, setHeatmap] = useState(null);
+  const [markers, setMarkers] = useState([]);
+  const [infoWindows, setInfoWindows] = useState([]);
 
+  // 动态加载 Google Maps API
   useEffect(() => {
-    const spotsWithAvailability = parkingData.map(spot => ({
-      ...spot,
-      availableSpots: spot.currentAvaliability
-    }));
-    setParkingSpots(spotsWithAvailability);
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization`;
+    script.async = true;
+    script.onload = () => setMapLoaded(true); // 当脚本加载完毕时更新状态
+    document.head.appendChild(script);
+
+    return () => {
+      // 清理脚本
+      document.head.removeChild(script);
+    };
   }, []);
 
-  // 动态更新热力图的半径
+  // 创建热力图数据
+  const getHeatmapData = useCallback(() => {
+    return parkingData.map((spot) => ({
+      location: new google.maps.LatLng(
+        spot.coordinates.lat,
+        spot.coordinates.lng
+      ),
+      weight: (1 - spot.currentAvaliability / spot.totalSpaces) * 5,
+    }));
+  }, []);
+
+  // 初始化地图
   useEffect(() => {
-    const newRadius = Math.max(10, 80 * (zoomLevel / 12));
-    setRadius(newRadius);
-  }, [zoomLevel]);
+    if (!mapRef.current || map || !mapLoaded) return; // 等待脚本加载完成
 
-  return (
-    <MapContainer 
-      center={[43.7, -79.4]} 
-      zoom={12} 
-      style={{ height: "100vh", width: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
-      />
+    const googleMap = new google.maps.Map(mapRef.current, {
+      center: { lat: 43.7, lng: -79.4 },
+      zoom: 12,
+      styles: [
+        {
+          featureType: "poi.business",
+          stylers: [{ visibility: "off" }],
+        },
+      ],
+    });
 
-      {/* 监听缩放级别变化 */}
-      <ZoomLevelWatcher setZoomLevel={setZoomLevel} />
+    // 添加交通图层
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayer.setMap(googleMap);
 
-      <HeatmapLayer data={parkingSpots} radius={radius} />
+    setMap(googleMap);
+  }, [mapRef, map, mapLoaded]);
 
-      {parkingSpots.map(spot => (
-        zoomLevel >= 14 && (
-          <Marker key={spot.id} position={[spot.coordinates.lat, spot.coordinates.lng]} icon={createParkingIcon()}>
-            <Popup>
-              <div>
-                <h3>{spot.name}</h3>
-                <p>Total Spaces: {spot.totalSpaces}</p>
-                <p>Handicap Spaces: {spot.handicapSpaces}</p>
-                <p>Access: {spot.access}</p>
-                <p>Available Now: {spot.currentAvaliability}</p>
-                <p>Prediction in 1 Hour: {spot.AvaliabilityAfterOneHour}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )
-      ))}
-    </MapContainer>
-  );
+  // 初始化热力图
+  useEffect(() => {
+    if (!map || !mapLoaded) return; // 等待脚本加载完成
+
+    try {
+      const heatmapData = getHeatmapData();
+      const heatmapLayer = new google.maps.visualization.HeatmapLayer({
+        data: heatmapData,
+        map: map,
+        radius: 80, // 固定半径大小，可以根据需要调整
+        opacity: 0.6,
+        gradient: [
+          "rgba(0, 0, 255, 0)",
+          "rgba(0, 0, 255, 1)",
+          "rgba(0, 255, 0, 1)",
+          "rgba(255, 255, 0, 1)",
+          "rgba(255, 0, 0, 1)",
+        ],
+      });
+
+      setHeatmap(heatmapLayer);
+
+      return () => {
+        if (heatmapLayer) {
+          heatmapLayer.setMap(null);
+        }
+      };
+    } catch (error) {
+      console.error("Error creating heatmap:", error);
+    }
+  }, [map, mapLoaded, getHeatmapData]);
+
+  // 创建标记点和信息窗口
+  useEffect(() => {
+    if (!map || markers.length > 0 || !mapLoaded) return; // 等待脚本加载完成
+
+    const newMarkers = [];
+    const newInfoWindows = [];
+
+    parkingData.forEach((spot) => {
+      const icon = {
+        url: `data:image/svg+xml,${encodeURIComponent(
+          ReactDOMServer.renderToString(
+            <FaParking style={{ fontSize: "24px", color: "black" }} />
+          )
+        )}`,
+        scaledSize: new google.maps.Size(24, 24),
+        anchor: new google.maps.Point(12, 24),
+      };
+
+      const marker = new google.maps.Marker({
+        position: {
+          lat: spot.coordinates.lat,
+          lng: spot.coordinates.lng,
+        },
+        icon: icon,
+        map: map,
+      });
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div>
+            <h3>${spot.name}</h3>
+            <p>Total Spaces: ${spot.totalSpaces}</p>
+            <p>Handicap Spaces: ${spot.handicapSpaces}</p>
+            <p>Access: ${spot.access}</p>
+            <p>Available Now: ${spot.currentAvaliability}</p>
+            <p>Prediction in 1 Hour: ${spot.AvaliabilityAfterOneHour}</p>
+          </div>
+        `,
+      });
+
+      marker.addListener("click", () => {
+        newInfoWindows.forEach((iw) => iw.close());
+        infoWindow.open(map, marker);
+      });
+
+      newMarkers.push(marker);
+      newInfoWindows.push(infoWindow);
+    });
+
+    setMarkers(newMarkers);
+    setInfoWindows(newInfoWindows);
+
+    return () => {
+      newMarkers.forEach((marker) => marker.setMap(null));
+      newInfoWindows.forEach((infoWindow) => infoWindow.close());
+    };
+  }, [map, mapLoaded]);
+
+  return <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />;
 };
 
 export default ParkingMap;
