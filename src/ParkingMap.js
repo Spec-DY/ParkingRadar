@@ -2,11 +2,11 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import parkingData from "./data/nearby_parking.json";
-import { FaParking } from "react-icons/fa";
 import ReactDOMServer from "react-dom/server";
 import './ParkingMap.css';
 import { Popover } from "@mui/material";
 import RouteCalculator from "./RouteCalculator";
+import { FaParking, FaAccessibleIcon, FaDoorOpen, FaCheckCircle, FaClock } from "react-icons/fa";
 
 const ParkingMap = () => {
   const mapRef = useRef(null);
@@ -20,6 +20,7 @@ const ParkingMap = () => {
   const [routesInfo, setRoutesInfo] = useState([]);
   const [activeRouteIndex, setActiveRouteIndex] = useState(0);
   const [showControls, setShowControls] = useState(false);
+  const [stadiumInfoWindow, setStadiumInfoWindow] = useState(null);
 
   const userLocation = { lat: 43.8361, lng: -79.5083 };
 
@@ -133,7 +134,28 @@ const ParkingMap = () => {
     });
 
     setMarkers(newMarkers);
-  }, [map, mapLoaded]);
+// Stadium marker code
+const stadiumIcon = {
+  url: `${process.env.PUBLIC_URL}/stadium.png`,
+  scaledSize: new google.maps.Size(60, 60),
+  anchor: new google.maps.Point(30, 60),
+};
+
+const stadiumMarker = new google.maps.Marker({
+  position: { lat: 43.641796, lng: -79.390083 },
+  icon: stadiumIcon,
+  map: map,
+});
+
+const stadiumInfoWindow = new google.maps.InfoWindow({
+  content: `<div style="width: 200px;"><h1>Rogers Centre</h1></div>`,
+});
+
+stadiumMarker.addListener("click", () => {
+  stadiumInfoWindow.open(map, stadiumMarker); // 仅使用 InfoWindow 显示
+});
+
+}, [map, mapLoaded]);
 
   // Close Popover
   const handleClose = () => {
@@ -205,31 +227,54 @@ const ParkingMap = () => {
 
       {/* Popover 组件 */}
       <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-      >
-        <div style={{ padding: 16 }}>
-          {selectedSpot && (
-            <>
-              <h3>{selectedSpot.name}</h3>
-              <p>Total Spaces: {selectedSpot.totalSpaces}</p>
-              <p>Handicap Spaces: {selectedSpot.handicapSpaces}</p>
-              <p>Access: {selectedSpot.access}</p>
-              <p>Available Now: {selectedSpot.currentAvaliability}</p>
-              <p>Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}</p>
-            </>
-          )}
+  open={Boolean(anchorEl)}
+  anchorEl={anchorEl}
+  onClose={handleClose}
+  anchorOrigin={{
+    vertical: "top",
+    horizontal: "center",
+  }}
+  transformOrigin={{
+    vertical: "bottom",
+    horizontal: "center",
+  }}
+>
+  <div style={{ padding: 16, width: 200 }}> {/* 固定宽度 */}
+    {selectedSpot && (
+      <>
+        <h3 style={{ textAlign: "center" }}>{selectedSpot.name}</h3> {/* 标题居中 */}
+
+        {/* 信息内容左对齐 */}
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaParking style={{ marginRight: 8 }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Total Spaces: {selectedSpot.totalSpaces}</p>
         </div>
-      </Popover>
+        
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaAccessibleIcon style={{ marginRight: 8 }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Handicap Spaces: {selectedSpot.handicapSpaces}</p>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaDoorOpen style={{ marginRight: 8 }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Access: {selectedSpot.access}</p>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaCheckCircle style={{ marginRight: 8 }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Available Now: {selectedSpot.currentAvaliability}</p>
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaClock style={{ marginRight: 8 }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}</p>
+        </div>
+      </>
+    )}
+  </div>
+</Popover>
+
+
     </div>
   );
 };
