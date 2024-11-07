@@ -22,7 +22,7 @@ const ParkingMap = () => {
   // Dynamic Google Maps API loading
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization&language=en`;
     script.async = true;
     script.onload = () => setMapLoaded(true);
     document.head.appendChild(script);
@@ -252,7 +252,7 @@ const ParkingMap = () => {
         onClick={() => setShowControls((prev) => !prev)}
         style={{ margin: "10px", padding: "5px 10px" }}
       >
-        {showControls ? "Hide Controls" : "Show Controls"}
+        {showControls ? "Hide Demo" : "Show Demo"}
       </button>
 
       {showControls && (
