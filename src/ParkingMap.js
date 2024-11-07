@@ -152,7 +152,7 @@ const stadiumInfoWindow = new google.maps.InfoWindow({
 });
 
 stadiumMarker.addListener("click", () => {
-  stadiumInfoWindow.open(map, stadiumMarker); // 仅使用 InfoWindow 显示
+  stadiumInfoWindow.open(map, stadiumMarker); // 仅使用 InfoWindow
 });
 
 }, [map, mapLoaded]);
