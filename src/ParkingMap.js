@@ -249,51 +249,52 @@ const ParkingMap = () => {
       <div ref={mapRef} style={{ height: "100vh", width: "calc(100% - 250px)" }} />
 
       {/* Popover Component */}
-      <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        transformOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <div style={{ padding: 16, width: 200 }}>
-          {selectedSpot && (
-            <>
-              <h3 style={{ textAlign: "center" }}>{selectedSpot.name}</h3>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <FaParking style={{ marginRight: 8 }} />
-                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
-                  Total Spaces: {selectedSpot.totalSpaces}
-                </p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <FaAccessibleIcon style={{ marginRight: 8 }} />
-                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
-                  Handicap Spaces: {selectedSpot.handicapSpaces}
-                </p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <FaDoorOpen style={{ marginRight: 8 }} />
-                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
-                  Access: {selectedSpot.access}
-                </p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <FaCheckCircle style={{ marginRight: 8 }} />
-                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
-                  Available Now: {selectedSpot.currentAvaliability}
-                </p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <FaClock style={{ marginRight: 8 }} />
-                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
-                  Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}
-                </p>
-              </div>
-            </>
-          )}
+      {/* Popover Component */}
+<Popover
+  open={Boolean(anchorEl)}
+  anchorEl={anchorEl}
+  onClose={handleClose}
+  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+>
+  <div style={{ padding: 16, width: 250 }}>
+    {selectedSpot && (
+      <>
+        <h3 style={{ textAlign: "center", fontSize: "20px", fontWeight: "bold" }}>{selectedSpot.name}</h3>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaParking style={{ marginRight: 8, fontSize: "18px" }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left", fontSize: "16px" }}>
+            Total Spaces: {selectedSpot.totalSpaces}
+          </p>
         </div>
-      </Popover>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaAccessibleIcon style={{ marginRight: 8, fontSize: "18px" }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left", fontSize: "16px" }}>
+            Handicap Spaces: {selectedSpot.handicapSpaces}
+          </p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaDoorOpen style={{ marginRight: 8, fontSize: "18px" }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left", fontSize: "16px" }}>
+            Access: {selectedSpot.access}
+          </p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaCheckCircle style={{ marginRight: 8, fontSize: "18px" }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left", fontSize: "16px" }}>
+            Available Now: {selectedSpot.currentAvaliability}
+          </p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <FaClock style={{ marginRight: 8, fontSize: "18px" }} />
+          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left", fontSize: "16px" }}>
+            Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}
+          </p>
+        </div>
+      </>
+    )}
+  </div>
+</Popover>
     </div>
   );
 };
