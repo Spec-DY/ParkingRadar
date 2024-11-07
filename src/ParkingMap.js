@@ -5,7 +5,8 @@ import parkingData from "./data/nearby_parking.json";
 import { FaParking } from "react-icons/fa";
 import ReactDOMServer from "react-dom/server";
 import './ParkingMap.css';
-import Popover from "@mui/material/Popover";
+import { Popover } from "@mui/material";
+import RouteCalculator from "./RouteCalculator";
 
 const ParkingMap = () => {
   const mapRef = useRef(null);
@@ -13,21 +14,21 @@ const ParkingMap = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [heatmap, setHeatmap] = useState(null);
   const [markers, setMarkers] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null); // Popover anchor element
-  const [selectedSpot, setSelectedSpot] = useState(null); // Store selected parking spot info
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedSpot, setSelectedSpot] = useState(null);
   const [selectedLot, setSelectedLot] = useState(null);
   const [routesInfo, setRoutesInfo] = useState([]);
-  const [activeRouteIndex, setActiveRouteIndex] = useState(0); // Default to first route
-  const [showControls, setShowControls] = useState(false); // Control visibility of controls
+  const [activeRouteIndex, setActiveRouteIndex] = useState(0);
+  const [showControls, setShowControls] = useState(false);
 
-  const userLocation = { lat: 43.8361, lng: -79.5083 }; // Hardcoded user location
+  const userLocation = { lat: 43.8361, lng: -79.5083 };
 
   // Dynamic Google Maps API loading
   useEffect(() => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization&language=en`;
     script.async = true;
-    script.onload = () => setMapLoaded(true); // 更新脚本加载状态
+    script.onload = () => setMapLoaded(true);
     document.head.appendChild(script);
 
     return () => {
@@ -49,7 +50,6 @@ const ParkingMap = () => {
   // Initialize map
   useEffect(() => {
     if (!mapRef.current || map || !mapLoaded) return;
-    if (!mapRef.current || map || !mapLoaded) return;
 
     const googleMap = new google.maps.Map(mapRef.current, {
       center: { lat: 43.7, lng: -79.4 },
@@ -68,18 +68,10 @@ const ParkingMap = () => {
     trafficLayer.setMap(googleMap);
 
     setMap(googleMap);
-
-    // User location marker
-    new google.maps.Marker({
-      position: userLocation,
-      map: googleMap,
-      title: "Your Location (Richmond Hill)",
-    });
   }, [mapRef, map, mapLoaded]);
 
   // Initialize heatmap
   useEffect(() => {
-    if (!map || !mapLoaded) return;
     if (!map || !mapLoaded) return;
 
     try {
@@ -87,7 +79,6 @@ const ParkingMap = () => {
       const heatmapLayer = new google.maps.visualization.HeatmapLayer({
         data: heatmapData,
         map: map,
-        radius: 80,
         radius: 80,
         opacity: 0.6,
         gradient: [
@@ -134,123 +125,26 @@ const ParkingMap = () => {
       });
 
       marker.addListener("click", (event) => {
-        setAnchorEl(event.domEvent.currentTarget); // 设置 Popover 锚点
-        setSelectedSpot(spot); // 设置当前停车位信息
+        setAnchorEl(event.domEvent.currentTarget);
+        setSelectedSpot(spot);
       });
 
       newMarkers.push(marker);
     });
 
     setMarkers(newMarkers);
-
-    const stadiumIcon = {
-      url: `${process.env.PUBLIC_URL}/stadium.png`,
-      scaledSize: new google.maps.Size(60, 60),
-      anchor: new google.maps.Point(30, 60),
-    };
-
-    const stadiumMarker = new google.maps.Marker({
-      position: { lat: 43.641796, lng: -79.390083 },
-      icon: stadiumIcon,
-      map: map,
-    });
-    const stadiumInfoWindow = new google.maps.InfoWindow({
-      content: `<div style="width: 200px;"><h1>Rogers Centre</h1></div>`,
-    });
-
-    stadiumMarker.addListener("click", () => {
-      stadiumInfoWindow.open(map, stadiumMarker); // 仅使用 InfoWindow 显示
-    });
-
   }, [map, mapLoaded]);
 
-  // Default selection for most available parking lot
-  useEffect(() => {
-    const mostAvailableLot = parkingData.reduce((prev, current) =>
-      prev.currentAvaliability > current.currentAvaliability ? prev : current
-    );
-    setSelectedLot(mostAvailableLot);
-  }, []);
-
-  // Calculate and display routes
-  const calculateRoute = () => {
-    if (!userLocation || !map || !selectedLot) return;
-
-    const directionsService = new google.maps.DirectionsService();
-
-    directionsService.route(
-      {
-        origin: userLocation,
-        destination: {
-          lat: selectedLot.coordinates.lat,
-          lng: selectedLot.coordinates.lng,
-        },
-        travelMode: google.maps.TravelMode.DRIVING,
-        provideRouteAlternatives: true,
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          routesInfo.forEach((route) => route.renderer.setMap(null));
-
-          const routeDetails = result.routes.map((route, index) => {
-            const directionsRenderer = new google.maps.DirectionsRenderer({
-              map: map,
-              routeIndex: index,
-              directions: result,
-              polylineOptions: {
-                strokeColor: index === activeRouteIndex ? "#1959F9" : "#BDCFF9",
-                strokeWeight: 8,
-                zIndex: index === activeRouteIndex ? 1 : 0,
-              },
-              suppressMarkers: false,
-              preserveViewport: true,
-            });
-
-            const routeInfoWindow = new google.maps.InfoWindow({
-              content: `<strong>Route ${index + 1}</strong>: ${
-                route.legs[0].duration.text
-              } (${route.legs[0].distance.text})`,
-              position: route.legs[0].end_location,
-            });
-
-            if (index === activeRouteIndex) {
-              routeInfoWindow.open(map);
-            }
-
-            google.maps.event.addListener(directionsRenderer, "click", () => {
-              setActiveRouteIndex(index);
-              setRoutesInfo((prevRoutes) => {
-                prevRoutes.forEach((r, i) => {
-                  if (i === index) {
-                    r.infoWindow.open(map);
-                  } else {
-                    r.infoWindow.close();
-                  }
-                });
-                return prevRoutes;
-              });
-            });
-
-            return {
-              renderer: directionsRenderer,
-              infoWindow: routeInfoWindow,
-              summary: route.summary,
-              duration: route.legs[0].duration.text,
-              distance: route.legs[0].distance.text,
-            };
-          });
-
-          setRoutesInfo(routeDetails);
-        } else {
-          console.error("Error fetching directions", result);
-        }
-      }
-    );
+  // Close Popover
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSelectedSpot(null);
   };
 
   return (
     <div>
       <div ref={mapRef} style={{ height: "95vh", width: "100%" }} />
+
       <button
         onClick={() => setShowControls((prev) => !prev)}
         style={{ margin: "10px", padding: "5px 10px" }}
@@ -277,9 +171,16 @@ const ParkingMap = () => {
               </option>
             ))}
           </select>
-          <button onClick={calculateRoute} disabled={!selectedLot}>
-            Navigate
-          </button>
+
+          <RouteCalculator
+            map={map}
+            userLocation={userLocation}
+            selectedLot={selectedLot}
+            routesInfo={routesInfo}
+            setRoutesInfo={setRoutesInfo}
+            activeRouteIndex={activeRouteIndex}
+            setActiveRouteIndex={setActiveRouteIndex}
+          />
 
           <div style={{ padding: "10px" }}>
             <ul>
@@ -301,17 +202,6 @@ const ParkingMap = () => {
           </div>
         </div>
       )}
-    </div>
-  );
-  // 关闭 Popover 的函数
-  const handleClose = () => {
-    setAnchorEl(null);
-    setSelectedSpot(null);
-  };
-
-  return (
-    <div>
-      <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />
 
       {/* Popover 组件 */}
       <Popover
