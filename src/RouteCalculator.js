@@ -1,6 +1,9 @@
 /* global google */
 import React, { useEffect } from "react";
 import Button from '@mui/material/Button';
+import Fab from '@mui/material/Fab';
+import NavigationIcon from '@mui/icons-material/Navigation';
+
 
 
 const RouteCalculator = ({
@@ -62,8 +65,14 @@ const RouteCalculator = ({
 
   return (
     <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
-      <Button variant="contained" onClick={calculateRoute} disabled={!selectedLot}>Navigate</Button>
+      {/* <Button variant="contained" onClick={calculateRoute} disabled={!selectedLot}>Navigate</Button> */}
+      <Fab variant="extended"  onClick={calculateRoute} disabled={!selectedLot}>
+    <NavigationIcon sx={{ mr: 1 }} />
+    Navigate
+    </Fab>
     </div>
+
+    
   );
 };
 

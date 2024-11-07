@@ -10,7 +10,7 @@ import { FaParking, FaAccessibleIcon, FaDoorOpen, FaCheckCircle, FaClock } from 
 
 import { Paper, Typography, FormControl, InputLabel, Select, MenuItem, List, ListItem, ListItemText } from "@mui/material"
 import { AppBar, Toolbar, Button, Box } from "@mui/material";
-import { ListItemIcon } from "@mui/material";
+import { ListItemIcon, Grow } from "@mui/material";
 import { PiNumberSquareOneBold, PiNumberSquareTwoBold, PiNumberSquareThreeBold } from "react-icons/pi";
 
 const ParkingMap = () => {
@@ -232,6 +232,7 @@ const ParkingMap = () => {
       {index === 1 && <PiNumberSquareTwoBold style={{ marginRight: 10, fontSize: "30px" }} />}
       {index === 2 && <PiNumberSquareThreeBold style={{ marginRight: 10, fontSize: "30px" }} />}
       </div>
+
       <ListItemText
         primary={`Route ${index + 1}: ${route.summary}`}
         secondary={`${route.duration} (${route.distance})`}
