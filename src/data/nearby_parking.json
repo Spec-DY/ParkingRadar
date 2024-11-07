@@ -1,0 +1,262 @@
+[
+    {
+        "id": 32204,
+        "name": "ALLAN A. LAMPORT STADIUM PARK",
+        "totalSpaces": 360,
+        "handicapSpaces": 3.0,
+        "coordinates": {
+            "lat": 43.6381423188,
+            "lng": -79.4231327179
+        },
+        "access": "Public",
+        "currentAvaliability": 180,
+        "AvaliabilityAfterOneHour": 162
+    },
+    {
+        "id": 32205,
+        "name": "ALLAN GARDENS",
+        "totalSpaces": 6,
+        "handicapSpaces": 2.0,
+        "coordinates": {
+            "lat": 43.6615560937,
+            "lng": -79.3748943066
+        },
+        "access": "Public",
+        "currentAvaliability": 3,
+        "AvaliabilityAfterOneHour": 2
+    },
+    {
+        "id": 44884,
+        "name": "CHERRY BEACH CLARKE BEACH PARK",
+        "totalSpaces": 126,
+        "handicapSpaces": 4.0,
+        "coordinates": {
+            "lat": 43.6369756466,
+            "lng": -79.3450072918
+        },
+        "access": "Public",
+        "currentAvaliability": 63,
+        "AvaliabilityAfterOneHour": 56
+    },
+    {
+        "id": 44886,
+        "name": "CHERRY BEACH CLARKE BEACH PARK",
+        "totalSpaces": 60,
+        "handicapSpaces": 4.0,
+        "coordinates": {
+            "lat": 43.6384237106,
+            "lng": -79.342555236
+        },
+        "access": "Public",
+        "currentAvaliability": 30,
+        "AvaliabilityAfterOneHour": 27
+    },
+    {
+        "id": 44883,
+        "name": "CHERRY BEACH SPORTS FIELDS",
+        "totalSpaces": 116,
+        "handicapSpaces": 5.0,
+        "coordinates": {
+            "lat": 43.6402494275,
+            "lng": -79.3424133021
+        },
+        "access": "Public",
+        "currentAvaliability": 58,
+        "AvaliabilityAfterOneHour": 52
+    },
+    {
+        "id": 32244,
+        "name": "CHRISTIE PITS PARK",
+        "totalSpaces": 6,
+        "handicapSpaces": 7.0,
+        "coordinates": {
+            "lat": 43.6649846973,
+            "lng": -79.4225494604
+        },
+        "access": "Public",
+        "currentAvaliability": 3,
+        "AvaliabilityAfterOneHour": 2
+    },
+    {
+        "id": 32255,
+        "name": "CORONATION PARK - TORONTO",
+        "totalSpaces": 20,
+        "handicapSpaces": 1.0,
+        "coordinates": {
+            "lat": 43.6342984396,
+            "lng": -79.4044194888
+        },
+        "access": "Private",
+        "currentAvaliability": 10,
+        "AvaliabilityAfterOneHour": 9
+    },
+    {
+        "id": 44889,
+        "name": "GARRISON COMMON",
+        "totalSpaces": 50,
+        "handicapSpaces": 5.0,
+        "coordinates": {
+            "lat": 43.6382001513,
+            "lng": -79.4053142139
+        },
+        "access": "Staff",
+        "currentAvaliability": 25,
+        "AvaliabilityAfterOneHour": 22
+    },
+    {
+        "id": 32559,
+        "name": "HARRISON POOL - Building Grounds",
+        "totalSpaces": 1,
+        "handicapSpaces": 1.0,
+        "coordinates": {
+            "lat": 43.6512722412,
+            "lng": -79.3909174087
+        },
+        "access": "Public",
+        "currentAvaliability": 0,
+        "AvaliabilityAfterOneHour": 0
+    },
+    {
+        "id": 32374,
+        "name": "LAKESHORE BOULEVARD PARKLANDS",
+        "totalSpaces": 120,
+        "handicapSpaces": 4.0,
+        "coordinates": {
+            "lat": 43.6328534766,
+            "lng": -79.4378068818
+        },
+        "access": "Public",
+        "currentAvaliability": 60,
+        "AvaliabilityAfterOneHour": 54
+    },
+    {
+        "id": 32395,
+        "name": "MCCORMICK PARK",
+        "totalSpaces": 25,
+        "handicapSpaces": 2.0,
+        "coordinates": {
+            "lat": 43.6475121895,
+            "lng": -79.4340090412
+        },
+        "access": "Public",
+        "currentAvaliability": 12,
+        "AvaliabilityAfterOneHour": 11
+    },
+    {
+        "id": 32410,
+        "name": "MOSS PARK",
+        "totalSpaces": 14,
+        "handicapSpaces": 1.0,
+        "coordinates": {
+            "lat": 43.6547497448,
+            "lng": -79.3700940045
+        },
+        "access": "Public",
+        "currentAvaliability": 7,
+        "AvaliabilityAfterOneHour": 6
+    },
+    {
+        "id": 32427,
+        "name": "RAMSDEN PARK",
+        "totalSpaces": 27,
+        "handicapSpaces": 5.0,
+        "coordinates": {
+            "lat": 43.6768236432,
+            "lng": -79.3903771362
+        },
+        "access": "Public",
+        "currentAvaliability": 13,
+        "AvaliabilityAfterOneHour": 12
+    },
+    {
+        "id": 32442,
+        "name": "SCADDING COURT COMMUNITY CENTRE - Building Grounds",
+        "totalSpaces": 14,
+        "handicapSpaces": 1.0,
+        "coordinates": {
+            "lat": 43.6514111136,
+            "lng": -79.4052794546
+        },
+        "access": "Staff",
+        "currentAvaliability": 7,
+        "AvaliabilityAfterOneHour": 6
+    },
+    {
+        "id": 44888,
+        "name": "THE GORE",
+        "totalSpaces": 75,
+        "handicapSpaces": 6.0,
+        "coordinates": {
+            "lat": 43.6358680978,
+            "lng": -79.4078460419
+        },
+        "access": "Public",
+        "currentAvaliability": 37,
+        "AvaliabilityAfterOneHour": 33
+    },
+    {
+        "id": 44891,
+        "name": "TORONTO INUKSHUK PARK",
+        "totalSpaces": 154,
+        "handicapSpaces": 6.0,
+        "coordinates": {
+            "lat": 43.6317354246,
+            "lng": -79.4101084751
+        },
+        "access": "Private",
+        "currentAvaliability": 77,
+        "AvaliabilityAfterOneHour": 69
+    },
+    {
+        "id": 44887,
+        "name": "TORONTO INUKSHUK PARK",
+        "totalSpaces": 123,
+        "handicapSpaces": 6.0,
+        "coordinates": {
+            "lat": 43.6330199115,
+            "lng": -79.4089624466
+        },
+        "access": "Staff",
+        "currentAvaliability": 61,
+        "AvaliabilityAfterOneHour": 55
+    },
+    {
+        "id": 44684,
+        "name": "TORONTO ISLANDS - ISLAND PARK",
+        "totalSpaces": 15,
+        "handicapSpaces": 1.0,
+        "coordinates": {
+            "lat": 43.6405154663,
+            "lng": -79.374593207
+        },
+        "access": "Staff",
+        "currentAvaliability": 7,
+        "AvaliabilityAfterOneHour": 6
+    },
+    {
+        "id": 32490,
+        "name": "TRINITY BELLWOODS PARK",
+        "totalSpaces": 28,
+        "handicapSpaces": 1.0,
+        "coordinates": {
+            "lat": 43.6462976449,
+            "lng": -79.4153110928
+        },
+        "access": "Public",
+        "currentAvaliability": 14,
+        "AvaliabilityAfterOneHour": 12
+    },
+    {
+        "id": 32493,
+        "name": "VERMONT SQUARE",
+        "totalSpaces": 120,
+        "handicapSpaces": 8.0,
+        "coordinates": {
+            "lat": 43.6711430214,
+            "lng": -79.415483693
+        },
+        "access": "Staff",
+        "currentAvaliability": 60,
+        "AvaliabilityAfterOneHour": 54
+    }
+]
