@@ -15,11 +15,17 @@ const ParkingMap = () => {
   const [markers, setMarkers] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null); // Popover anchor element
   const [selectedSpot, setSelectedSpot] = useState(null); // Store selected parking spot info
+  const [selectedLot, setSelectedLot] = useState(null);
+  const [routesInfo, setRoutesInfo] = useState([]);
+  const [activeRouteIndex, setActiveRouteIndex] = useState(0); // Default to first route
+  const [showControls, setShowControls] = useState(false); // Control visibility of controls
 
-  // 动态加载 Google Maps API
+  const userLocation = { lat: 43.8361, lng: -79.5083 }; // Hardcoded user location
+
+  // Dynamic Google Maps API loading
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization&language=en`;
     script.async = true;
     script.onload = () => setMapLoaded(true); // 更新脚本加载状态
     document.head.appendChild(script);
@@ -29,7 +35,7 @@ const ParkingMap = () => {
     };
   }, []);
 
-  // 创建热力图数据
+  // Function to create heatmap data
   const getHeatmapData = useCallback(() => {
     return parkingData.map((spot) => ({
       location: new google.maps.LatLng(
@@ -40,8 +46,9 @@ const ParkingMap = () => {
     }));
   }, []);
 
-  // 初始化地图
+  // Initialize map
   useEffect(() => {
+    if (!mapRef.current || map || !mapLoaded) return;
     if (!mapRef.current || map || !mapLoaded) return;
 
     const googleMap = new google.maps.Map(mapRef.current, {
@@ -61,10 +68,18 @@ const ParkingMap = () => {
     trafficLayer.setMap(googleMap);
 
     setMap(googleMap);
+
+    // User location marker
+    new google.maps.Marker({
+      position: userLocation,
+      map: googleMap,
+      title: "Your Location (Richmond Hill)",
+    });
   }, [mapRef, map, mapLoaded]);
 
-  // 初始化热力图
+  // Initialize heatmap
   useEffect(() => {
+    if (!map || !mapLoaded) return;
     if (!map || !mapLoaded) return;
 
     try {
@@ -72,6 +87,7 @@ const ParkingMap = () => {
       const heatmapLayer = new google.maps.visualization.HeatmapLayer({
         data: heatmapData,
         map: map,
+        radius: 80,
         radius: 80,
         opacity: 0.6,
         gradient: [
@@ -95,7 +111,7 @@ const ParkingMap = () => {
     }
   }, [map, mapLoaded, getHeatmapData]);
 
-  // 创建标记点和 Popover 显示内容
+  // Create markers and info windows
   useEffect(() => {
     if (!map || markers.length > 0 || !mapLoaded) return;
 
@@ -148,6 +164,145 @@ const ParkingMap = () => {
 
   }, [map, mapLoaded]);
 
+  // Default selection for most available parking lot
+  useEffect(() => {
+    const mostAvailableLot = parkingData.reduce((prev, current) =>
+      prev.currentAvaliability > current.currentAvaliability ? prev : current
+    );
+    setSelectedLot(mostAvailableLot);
+  }, []);
+
+  // Calculate and display routes
+  const calculateRoute = () => {
+    if (!userLocation || !map || !selectedLot) return;
+
+    const directionsService = new google.maps.DirectionsService();
+
+    directionsService.route(
+      {
+        origin: userLocation,
+        destination: {
+          lat: selectedLot.coordinates.lat,
+          lng: selectedLot.coordinates.lng,
+        },
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: true,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          routesInfo.forEach((route) => route.renderer.setMap(null));
+
+          const routeDetails = result.routes.map((route, index) => {
+            const directionsRenderer = new google.maps.DirectionsRenderer({
+              map: map,
+              routeIndex: index,
+              directions: result,
+              polylineOptions: {
+                strokeColor: index === activeRouteIndex ? "#1959F9" : "#BDCFF9",
+                strokeWeight: 8,
+                zIndex: index === activeRouteIndex ? 1 : 0,
+              },
+              suppressMarkers: false,
+              preserveViewport: true,
+            });
+
+            const routeInfoWindow = new google.maps.InfoWindow({
+              content: `<strong>Route ${index + 1}</strong>: ${
+                route.legs[0].duration.text
+              } (${route.legs[0].distance.text})`,
+              position: route.legs[0].end_location,
+            });
+
+            if (index === activeRouteIndex) {
+              routeInfoWindow.open(map);
+            }
+
+            google.maps.event.addListener(directionsRenderer, "click", () => {
+              setActiveRouteIndex(index);
+              setRoutesInfo((prevRoutes) => {
+                prevRoutes.forEach((r, i) => {
+                  if (i === index) {
+                    r.infoWindow.open(map);
+                  } else {
+                    r.infoWindow.close();
+                  }
+                });
+                return prevRoutes;
+              });
+            });
+
+            return {
+              renderer: directionsRenderer,
+              infoWindow: routeInfoWindow,
+              summary: route.summary,
+              duration: route.legs[0].duration.text,
+              distance: route.legs[0].distance.text,
+            };
+          });
+
+          setRoutesInfo(routeDetails);
+        } else {
+          console.error("Error fetching directions", result);
+        }
+      }
+    );
+  };
+
+  return (
+    <div>
+      <div ref={mapRef} style={{ height: "95vh", width: "100%" }} />
+      <button
+        onClick={() => setShowControls((prev) => !prev)}
+        style={{ margin: "10px", padding: "5px 10px" }}
+      >
+        {showControls ? "Hide Demo" : "Show Demo"}
+      </button>
+
+      {showControls && (
+        <div style={{ padding: "10px" }}>
+          <label>Select Parking Lot: </label>
+          <select
+            value={selectedLot ? selectedLot.id : ""}
+            onChange={(e) => {
+              const lot = parkingData.find(
+                (lot) => lot.id === parseInt(e.target.value)
+              );
+              setSelectedLot(lot);
+            }}
+          >
+            <option value="">Choose a parking lot</option>
+            {parkingData.map((lot) => (
+              <option key={lot.id} value={lot.id}>
+                {lot.name} (Available: {lot.currentAvaliability})
+              </option>
+            ))}
+          </select>
+          <button onClick={calculateRoute} disabled={!selectedLot}>
+            Navigate
+          </button>
+
+          <div style={{ padding: "10px" }}>
+            <ul>
+              {routesInfo.map((route, index) => (
+                <li
+                  key={index}
+                  onClick={() => setActiveRouteIndex(index)}
+                  style={{
+                    cursor: "pointer",
+                    fontWeight: index === activeRouteIndex ? "bold" : "normal",
+                    color: index === activeRouteIndex ? "blue" : "black",
+                  }}
+                >
+                  <strong>Route {index + 1}</strong>: {route.summary} -{" "}
+                  {route.duration} ({route.distance})
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
   // 关闭 Popover 的函数
   const handleClose = () => {
     setAnchorEl(null);
