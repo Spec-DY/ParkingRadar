@@ -23,21 +23,19 @@ const ParkingMap = () => {
   const [stadiumInfoWindow, setStadiumInfoWindow] = useState(null);
 
   const userLocation = { lat: 43.8361, lng: -79.5083 };
+  const stadiumInfoWindowRef = useRef(null);
 
-  // Dynamic Google Maps API loading
   useEffect(() => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=visualization&language=en`;
     script.async = true;
     script.onload = () => setMapLoaded(true);
     document.head.appendChild(script);
-
     return () => {
       document.head.removeChild(script);
     };
-  }, []);
+    }, []);
 
-  // Function to create heatmap data
   const getHeatmapData = useCallback(() => {
     return parkingData.map((spot) => ({
       location: new google.maps.LatLng(
@@ -48,7 +46,6 @@ const ParkingMap = () => {
     }));
   }, []);
 
-  // Initialize map
   useEffect(() => {
     if (!mapRef.current || map || !mapLoaded) return;
 
@@ -64,14 +61,11 @@ const ParkingMap = () => {
     });
 
     googleMap.setOptions({ clickableIcons: false });
-
     const trafficLayer = new google.maps.TrafficLayer();
     trafficLayer.setMap(googleMap);
-
     setMap(googleMap);
   }, [mapRef, map, mapLoaded]);
 
-  // Initialize heatmap
   useEffect(() => {
     if (!map || !mapLoaded) return;
 
@@ -90,9 +84,7 @@ const ParkingMap = () => {
           "rgba(255, 0, 0, 1)",
         ],
       });
-
       setHeatmap(heatmapLayer);
-
       return () => {
         if (heatmapLayer) {
           heatmapLayer.setMap(null);
@@ -103,12 +95,10 @@ const ParkingMap = () => {
     }
   }, [map, mapLoaded, getHeatmapData]);
 
-  // Create markers and info windows
   useEffect(() => {
     if (!map || markers.length > 0 || !mapLoaded) return;
 
     const newMarkers = [];
-
     const parkingIcon = {
       url: `${process.env.PUBLIC_URL}/parking.png`,
       scaledSize: new google.maps.Size(24, 24),
@@ -117,95 +107,91 @@ const ParkingMap = () => {
 
     parkingData.forEach((spot) => {
       const marker = new google.maps.Marker({
-        position: {
-          lat: spot.coordinates.lat,
-          lng: spot.coordinates.lng,
-        },
+        position: { lat: spot.coordinates.lat, lng: spot.coordinates.lng },
         icon: parkingIcon,
         map: map,
       });
-
       marker.addListener("click", (event) => {
         setAnchorEl(event.domEvent.currentTarget);
         setSelectedSpot(spot);
+        if (stadiumInfoWindow) stadiumInfoWindow.close();
       });
-
       newMarkers.push(marker);
     });
-
     setMarkers(newMarkers);
-// Stadium marker code
-const stadiumIcon = {
-  url: `${process.env.PUBLIC_URL}/stadium.png`,
-  scaledSize: new google.maps.Size(60, 60),
-  anchor: new google.maps.Point(30, 60),
-};
 
-const stadiumMarker = new google.maps.Marker({
-  position: { lat: 43.641796, lng: -79.390083 },
-  icon: stadiumIcon,
-  map: map,
-});
+    const stadiumIcon = {
+      url: `${process.env.PUBLIC_URL}/stadium.png`,
+      scaledSize: new google.maps.Size(60, 60),
+      anchor: new google.maps.Point(30, 60),
+    };
+    const stadiumMarker = new google.maps.Marker({
+      position: { lat: 43.641796, lng: -79.390083 },
+      icon: stadiumIcon,
+      map: map,
+    });
 
-const stadiumInfoWindow = new google.maps.InfoWindow({
-  content: `<div style="width: 200px;"><h1>Rogers Centre</h1></div>`,
-});
+    const newStadiumInfoWindow = new google.maps.InfoWindow({
+      content: `<div style="width: 200px;"><h1>Rogers Centre</h1></div>`,
+    });
+    stadiumMarker.addListener("click", () => {
+      if (stadiumInfoWindow) stadiumInfoWindow.close();
+      newStadiumInfoWindow.open(map, stadiumMarker);
+      setAnchorEl(null);
+    });
+    setStadiumInfoWindow(newStadiumInfoWindow);
 
-stadiumMarker.addListener("click", () => {
-  stadiumInfoWindow.open(map, stadiumMarker); // 仅使用 InfoWindow
-});
+    map.addListener("click", () => {
+      if (stadiumInfoWindow) stadiumInfoWindow.close();
+    });
+  }, [map, mapLoaded]);
 
-}, [map, mapLoaded]);
-
-  // Close Popover
   const handleClose = () => {
     setAnchorEl(null);
     setSelectedSpot(null);
   };
 
   return (
-    <div>
-      <div ref={mapRef} style={{ height: "95vh", width: "100%" }} />
+    <div style={{ display: "flex" }}>
+      {/* Left Sidebar for Route Selection */}
+      <div style={{ width: "250px", padding: "10px", overflowY: "auto", backgroundColor: "#f4f4f4" }}>
+        <button
+          onClick={() => setShowControls((prev) => !prev)}
+          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+        >
+          {showControls ? "Hide Demo" : "Show Demo"}
+        </button>
 
-      <button
-        onClick={() => setShowControls((prev) => !prev)}
-        style={{ margin: "10px", padding: "5px 10px" }}
-      >
-        {showControls ? "Hide Demo" : "Show Demo"}
-      </button>
-
-      {showControls && (
-        <div style={{ padding: "10px" }}>
-          <label>Select Parking Lot: </label>
-          <select
-            value={selectedLot ? selectedLot.id : ""}
-            onChange={(e) => {
-              const lot = parkingData.find(
-                (lot) => lot.id === parseInt(e.target.value)
-              );
-              setSelectedLot(lot);
-            }}
-          >
-            <option value="">Choose a parking lot</option>
-            {parkingData.map((lot) => (
-              <option key={lot.id} value={lot.id}>
-                {lot.name} (Available: {lot.currentAvaliability})
-              </option>
-            ))}
-          </select>
-
-          <RouteCalculator
-            map={map}
-            userLocation={userLocation}
-            selectedLot={selectedLot}
-            routesInfo={routesInfo}
-            setRoutesInfo={setRoutesInfo}
-            activeRouteIndex={activeRouteIndex}
-            setActiveRouteIndex={setActiveRouteIndex}
-          />
-
+        {showControls && (
           <div style={{ padding: "10px" }}>
-            <ul>
+            <label>Select Parking Lot: </label>
+            <select
+              value={selectedLot ? selectedLot.id : ""}
+              onChange={(e) => {
+                const lot = parkingData.find((lot) => lot.id === parseInt(e.target.value));
+                setSelectedLot(lot);
+              }}
+              style={{ width: "100%", marginBottom: "10px" }}
+            >
+              <option value="">Choose a parking lot</option>
+              {parkingData.map((lot) => (
+                <option key={lot.id} value={lot.id}>
+                  {lot.name} (Available: {lot.currentAvaliability})
+                </option>
+              ))}
+            </select>
+
+            <RouteCalculator
+              map={map}
+              userLocation={userLocation}
+              selectedLot={selectedLot}
+              routesInfo={routesInfo}
+              setRoutesInfo={setRoutesInfo}
+              activeRouteIndex={activeRouteIndex}
+              setActiveRouteIndex={setActiveRouteIndex}
+            />
+
+            <ul style={{ paddingLeft: "10px" }}>
               {routesInfo.map((route, index) => (
                 <li
                   key={index}
@@ -214,67 +200,66 @@ stadiumMarker.addListener("click", () => {
                     cursor: "pointer",
                     fontWeight: index === activeRouteIndex ? "bold" : "normal",
                     color: index === activeRouteIndex ? "blue" : "black",
+                    padding: "5px 0",
                   }}
                 >
-                  <strong>Route {index + 1}</strong>: {route.summary} -{" "}
-                  {route.duration} ({route.distance})
+                  <strong>Route {index + 1}</strong>: {route.summary} - {route.duration} ({route.distance})
                 </li>
               ))}
             </ul>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Popover 组件 */}
+      {/* Map Area */}
+      <div ref={mapRef} style={{ height: "100vh", width: "calc(100% - 250px)" }} />
+
+      {/* Popover Component */}
       <Popover
-  open={Boolean(anchorEl)}
-  anchorEl={anchorEl}
-  onClose={handleClose}
-  anchorOrigin={{
-    vertical: "top",
-    horizontal: "center",
-  }}
-  transformOrigin={{
-    vertical: "bottom",
-    horizontal: "center",
-  }}
->
-  <div style={{ padding: 16, width: 200 }}> {/* 固定宽度 */}
-    {selectedSpot && (
-      <>
-        <h3 style={{ textAlign: "center" }}>{selectedSpot.name}</h3> {/* 标题居中 */}
-
-        {/* 信息内容左对齐 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <FaParking style={{ marginRight: 8 }} />
-          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Total Spaces: {selectedSpot.totalSpaces}</p>
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <div style={{ padding: 16, width: 200 }}>
+          {selectedSpot && (
+            <>
+              <h3 style={{ textAlign: "center" }}>{selectedSpot.name}</h3>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <FaParking style={{ marginRight: 8 }} />
+                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
+                  Total Spaces: {selectedSpot.totalSpaces}
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <FaAccessibleIcon style={{ marginRight: 8 }} />
+                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
+                  Handicap Spaces: {selectedSpot.handicapSpaces}
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <FaDoorOpen style={{ marginRight: 8 }} />
+                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
+                  Access: {selectedSpot.access}
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <FaCheckCircle style={{ marginRight: 8 }} />
+                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
+                  Available Now: {selectedSpot.currentAvaliability}
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <FaClock style={{ marginRight: 8 }} />
+                <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>
+                  Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}
+                </p>
+              </div>
+            </>
+          )}
         </div>
-        
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <FaAccessibleIcon style={{ marginRight: 8 }} />
-          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Handicap Spaces: {selectedSpot.handicapSpaces}</p>
-        </div>
-        
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <FaDoorOpen style={{ marginRight: 8 }} />
-          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Access: {selectedSpot.access}</p>
-        </div>
-        
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <FaCheckCircle style={{ marginRight: 8 }} />
-          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Available Now: {selectedSpot.currentAvaliability}</p>
-        </div>
-        
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <FaClock style={{ marginRight: 8 }} />
-          <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left" }}>Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}</p>
-        </div>
-      </>
-    )}
-  </div>
-</Popover>
-
-
+      </Popover>
     </div>
   );
 };
