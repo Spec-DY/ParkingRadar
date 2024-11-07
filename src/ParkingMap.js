@@ -288,7 +288,7 @@ const ParkingMap = () => {
         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
           <FaClock style={{ marginRight: 8, fontSize: "18px" }} />
           <p style={{ margin: 0, wordWrap: "break-word", textAlign: "left", fontSize: "16px" }}>
-            Prediction in 1 Hour: {selectedSpot.AvaliabilityAfterOneHour}
+            Avaliability after 1 hour: {selectedSpot.AvaliabilityAfterOneHour}
           </p>
         </div>
       </>
