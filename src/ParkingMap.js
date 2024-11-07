@@ -101,6 +101,12 @@ const ParkingMap = () => {
     const newMarkers = [];
     const newInfoWindows = [];
 
+    const parkingIcon = {
+      url: `${process.env.PUBLIC_URL}/parking.png`,
+      scaledSize: new google.maps.Size(24, 24),
+      anchor: new google.maps.Point(12, 24),
+    };
+
     parkingData.forEach((spot) => {
       const icon = {
         url: `data:image/svg+xml,${encodeURIComponent(
@@ -117,7 +123,7 @@ const ParkingMap = () => {
           lat: spot.coordinates.lat,
           lng: spot.coordinates.lng,
         },
-        icon: icon,
+        icon: parkingIcon,
         map: map,
       });
 
